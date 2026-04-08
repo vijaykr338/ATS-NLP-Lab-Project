@@ -1,0 +1,5 @@
+We are hiring a Data Analyst / Junior ML Engineer.
+Required skills: Python programming, SQL queries, data analysis, and ML.
+Hands-on experience with pandas or NumPy is expected.
+Experience deploying models using Docker is preferred but not mandatory.
+Strong problem-solving and communication skills required.

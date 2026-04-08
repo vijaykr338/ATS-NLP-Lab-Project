@@ -1,0 +1,184 @@
+/* --- Global Reset & Typography --- */
+:root {
+    --primary: #2563eb;       /* Professional Blue */
+    --primary-hover: #1d4ed8;
+    --bg-color: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+    --success: #10b981;
+    --danger: #ef4444;
+}
+
+*{box-sizing: border-box; margin: 0; padding: 0;}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.main-container {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 700px;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+header { text-align: center; margin-bottom: 2rem; }
+header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.highlight { color: var(--primary); }
+header p { color: var(--text-light); font-size: 0.9rem; }
+
+/* --- Form Styles --- */
+.input-group { margin-bottom: 1.5rem; }
+.input-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+
+textarea {
+    width: 100%;
+    height: 120px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    resize: vertical;
+}
+textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+/* --- Your Custom Button (Adapted) --- */
+.container-btn-file {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--primary);
+    color: #fff;
+    border-style: none;
+    padding: 0.8em 1.5em; /* Slightly smaller for balance */
+    border-radius: 0.5em;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 250ms;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.container-btn-file input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    left: 0; top: 0;
+}
+
+.container-btn-file > svg { margin-right: 1em; }
+
+.container-btn-file::before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 0;
+    border-radius: 0.5em;
+    background-color: var(--primary-hover);
+    z-index: -1;
+    transition: all 350ms;
+    left: 0;
+}
+
+.container-btn-file:hover::before { width: 100%; }
+
+.file-name {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.analyze-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--text-dark);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.analyze-btn:hover { background-color: black; }
+
+/* --- Results Dashboard --- */
+.hidden { display: none; }
+
+.score-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.score-circle {
+    background: white;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 5px solid var(--primary);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.score-circle span { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.score-circle small { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; }
+
+.category-info { text-align: center; }
+.category-badge {
+    background-color: #dbeafe;
+    color: #1e40af;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* --- Skills Tags --- */
+.skills-section { margin-top: 20px; }
+.skill-box { margin-bottom: 20px; }
+.skill-box h4 { margin-bottom: 10px; font-size: 0.95rem; }
+
+.tags-container { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.tag {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+.tag-match { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.tag-missing { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* --- Spinner --- */
+#loading { text-align: center; margin-top: 20px; }
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
