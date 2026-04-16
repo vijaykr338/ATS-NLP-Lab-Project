@@ -12,8 +12,14 @@ from matcher import (
     compute_skill_overlap,
     compute_tfidf_similarities,
 )
+from constraints_parser import evaluate_hard_constraints, parse_hard_constraints_from_jd
 from parser import process_job_description, process_resume_pdf
 from skill_extractor import extract_skills, extract_skills_regex
+from structured_signals import (
+    extract_cgpa,
+    extract_relevant_years_experience,
+    normalize_education_levels,
+)
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'))
 
@@ -25,10 +31,19 @@ def _extract_skill_set(clean_text_value):
     return extract_skills(clean_text_value) | extract_skills_regex(clean_text_value)
 
 
-def analyze_multiple_resumes(jd_text, resume_files, top_n=None):
+def analyze_multiple_resumes(jd_text, resume_files, top_n=None, constraint_mode="exclude"):
+    constraint_mode = (constraint_mode or "exclude").lower().strip()
+    if constraint_mode not in {"exclude", "penalize"}:
+        constraint_mode = "exclude"
+
     jd_processed = process_job_description(jd_text)
     jd_clean_text = jd_processed["clean_text"]
     jd_skills = _extract_skill_set(jd_clean_text)
+    hard_constraints = parse_hard_constraints_from_jd(jd_text, jd_skills)
+
+    must_have_skills = hard_constraints["must_have_skills"]
+    min_years_required = hard_constraints["min_years_required"]
+    min_cgpa_required = hard_constraints["min_cgpa_required"]
 
     resume_records = []
     for resume_file in resume_files:
@@ -54,11 +69,41 @@ def analyze_multiple_resumes(jd_text, resume_files, top_n=None):
             ]
         )
 
+        resume_skills = _extract_skill_set(skill_context)
+        relevant_terms = must_have_skills if must_have_skills else jd_skills
+        experience_signal = extract_relevant_years_experience(
+            parsed_resume["sections"].get("experience", ""),
+            relevant_terms=relevant_terms,
+        )
+        education_signal = normalize_education_levels(
+            parsed_resume["sections"].get("education", "")
+        )
+        cgpa_signal = extract_cgpa(parsed_resume["sections"].get("education", ""))
+        hard_gate = evaluate_hard_constraints(
+            resume_skills=resume_skills,
+            must_have_skills=must_have_skills,
+            years_experience=experience_signal["relevant_years_experience"],
+            min_years_required=min_years_required,
+            cgpa_value=cgpa_signal["cgpa_value"],
+            min_cgpa_required=min_cgpa_required,
+        )
+
+        if constraint_mode == "exclude" and hard_gate["g_hard"] == 0:
+            continue
+
         resume_records.append(
             {
                 "resume_id": safe_name,
                 "clean_text": parsed_resume["clean_text"],
-                "resume_skills": _extract_skill_set(skill_context),
+                "resume_skills": resume_skills,
+                "g_hard": hard_gate["g_hard"],
+                "failed_constraints": hard_gate["failed_constraints"],
+                "hard_constraint_reason_codes": hard_gate["reason_codes"],
+                "relevant_years_experience": experience_signal["relevant_years_experience"],
+                "total_years_experience": experience_signal["total_years_experience"],
+                "education_levels": education_signal["education_levels"],
+                "highest_education": education_signal["highest_education"],
+                "cgpa_value": cgpa_signal["cgpa_value"],
             }
         )
 
@@ -88,6 +133,18 @@ def analyze_multiple_resumes(jd_text, resume_files, top_n=None):
             skill_overlap_score,
         )
 
+        explanation = build_rank_reason(
+            embedding_similarity,
+            tfidf_similarity,
+            skill_overlap_score,
+        )
+
+        if constraint_mode == "penalize" and record["g_hard"] == 0:
+            final_score = 0.0
+            explanation = "Failed hard constraints. " + " | ".join(
+                record["failed_constraints"]
+            )
+
         ranked_results.append(
             {
                 "resume_id": record["resume_id"],
@@ -97,11 +154,15 @@ def analyze_multiple_resumes(jd_text, resume_files, top_n=None):
                 "skill_overlap_score": round(skill_overlap_score, 4),
                 "matched_skills": matched_skills,
                 "missing_skills": missing_skills,
-                "explanation": build_rank_reason(
-                    embedding_similarity,
-                    tfidf_similarity,
-                    skill_overlap_score,
-                ),
+                "g_hard": record["g_hard"],
+                "failed_constraints": record["failed_constraints"],
+                "hard_constraint_reason_codes": record["hard_constraint_reason_codes"],
+                "relevant_years_experience": round(record["relevant_years_experience"], 2),
+                "total_years_experience": round(record["total_years_experience"], 2),
+                "education_levels": record["education_levels"],
+                "highest_education": record["highest_education"],
+                "cgpa_value": record["cgpa_value"],
+                "explanation": explanation,
             }
         )
 
@@ -127,12 +188,18 @@ def analyze_resume():
             resume_files = [single_resume]
 
     top_n = request.form.get("top_n", type=int)
+    constraint_mode = (request.form.get("constraint_mode") or "exclude").strip().lower()
 
     if not jd_text or not resume_files:
         return jsonify({"error": "Job description and at least one resume are required"}), 400
 
     try:
-        ranked_results = analyze_multiple_resumes(jd_text, resume_files, top_n=top_n)
+        ranked_results = analyze_multiple_resumes(
+            jd_text,
+            resume_files,
+            top_n=top_n,
+            constraint_mode=constraint_mode,
+        )
     except Exception as exc:
         return jsonify({"error": f"Failed to analyze resumes: {exc}"}), 500
 

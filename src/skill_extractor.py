@@ -2,6 +2,7 @@ SKILLS = [
     "python", "sql", "machine learning", "data analysis",
     "docker", "flask", "tensorflow", "pandas",
     "numpy", "javascript", "react", "html", "css",
+    "java", "spring",
 
     # Data Science & ML
     "scikit-learn", "matplotlib", "seaborn", "statistics",
@@ -41,6 +42,8 @@ REGEX_SKILLS = {
     "c++": r"(c\+\+)",
     "python": r"\bpython\b",
     "sql": r"\bsql\b",
+    "java": r"\bjava\b",
+    "spring": r"\bspring\b",
 
     "node.js": r"(node\.?js|nodejs|\bnode\b)",
     "express.js": r"(express\.?js|expressjs|\bexpress\b)",

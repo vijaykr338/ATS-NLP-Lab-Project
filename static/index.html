@@ -37,6 +37,15 @@
                     <p class="field-hint">Leave blank to rank and return all uploaded resumes.</p>
                 </div>
 
+                <div class="topn-row field-box">
+                    <label for="constraint_mode">Hard Constraint Mode</label>
+                    <select id="constraint_mode" name="constraint_mode">
+                        <option value="exclude" selected>Exclude failed candidates</option>
+                        <option value="penalize">Keep failed candidates with score 0</option>
+                    </select>
+                    <p class="field-hint">Hard constraints are parsed from the JD (must-have skills, minimum relevant years, and CGPA).</p>
+                </div>
+
                 <button type="submit" id="submitBtn" class="analyze-btn">Rank Candidates</button>
             </form>
 
@@ -51,10 +60,60 @@
                 <h2>Ranked Candidates</h2>
                 <span id="result-count" class="badge">0 results</span>
             </header>
+
+            <section id="analytics" class="analytics hidden">
+                <div class="analytics-grid">
+                    <article class="analytics-card chart-card">
+                        <h3>Score Comparison Across Candidates</h3>
+                        <p class="analytics-subtitle">Visual contribution of embedding, TF-IDF, skill overlap, and final score per candidate.</p>
+                        <div class="chart-wrap">
+                            <canvas id="scoreComparisonChart" aria-label="Score comparison across candidates"></canvas>
+                        </div>
+                    </article>
+
+                    <article class="analytics-card chart-card">
+                        <h3>Constraint Filtering</h3>
+                        <p class="analytics-subtitle">How many candidates passed vs failed hard constraints.</p>
+                        <div class="chart-wrap pie-wrap">
+                            <canvas id="constraintPieChart" aria-label="Constraint filtering pie chart"></canvas>
+                        </div>
+                    </article>
+                </div>
+
+                <article class="analytics-card">
+                    <h3>Precision Table</h3>
+                    <p class="analytics-subtitle">Candidate-wise normalized score components for fast shortlisting decisions.</p>
+                    <div class="table-wrap">
+                        <table class="precision-table" id="precisionTable">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Candidate</th>
+                                    <th>Embedding</th>
+                                    <th>TF-IDF</th>
+                                    <th>Skill</th>
+                                    <th>Final</th>
+                                    <th>Constraint</th>
+                                </tr>
+                            </thead>
+                            <tbody id="precisionTableBody"></tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article class="analytics-card">
+                    <h3>Hiring Insights</h3>
+                    <p class="analytics-subtitle">Quick summary statistics and common skill gaps across this candidate batch.</p>
+                    <div id="insightStats" class="insight-stats"></div>
+                    <div id="skillGapList" class="skill-gap-list"></div>
+                </article>
+            </section>
+
             <div id="ranking-list" class="ranking-list"></div>
         </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/script.js"></script>
 </body>
 </html>
