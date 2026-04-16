@@ -84,14 +84,40 @@ http://localhost:5000
 
 ## How the App Works
 
-- The frontend in `static/` collects a PDF resume and a job description.
-- The browser sends both to the Flask backend at `POST /analyze`.
-- The backend extracts text from the PDF, cleans the text with spaCy, extracts skills, calculates a match score, and predicts a resume category.
-- Results are returned as JSON and displayed in the UI.
+- The frontend in `static/` collects one job description and multiple resume PDFs.
+- The browser sends data to the Flask backend at `POST /analyze`.
+- The backend processes the job description once (cleaning + embedding + TF-IDF setup).
+- Each resume is parsed, cleaned, sectioned (skills/experience/education), embedded, and compared with the job description.
+- The final score per resume uses:
+
+```text
+final_score = 0.5 * embedding_similarity + 0.3 * tfidf_similarity + 0.2 * skill_overlap_score
+```
+
+- The backend returns ranked candidates (highest score first), with matched and missing skills and an explanation string.
+
+## API Response Shape (`POST /analyze`)
+
+```json
+[
+	{
+		"rank": 1,
+		"resume_id": "candidate_a.pdf",
+		"score": 0.87,
+		"embedding_similarity": 0.91,
+		"tfidf_similarity": 0.82,
+		"skill_overlap_score": 0.75,
+		"matched_skills": ["python", "sql"],
+		"missing_skills": ["docker"],
+		"explanation": "High semantic alignment with the job description, strong keyword similarity (0.82), and skill coverage (0.75)."
+	}
+]
+```
 
 ## Notes
 
 - The app works best with text-based PDF resumes. Scanned PDFs may not extract correctly.
-- The classifier uses pre-trained model files stored in `models/`.
+- The embedding model is `all-MiniLM-L6-v2` from `sentence-transformers`.
+- You can optionally send `top_n` to return only the highest-ranked resumes.
 - The app saves uploaded resumes temporarily in `Data/Resumes/` when running locally.
 - Docker is optional, but it provides the most consistent environment.

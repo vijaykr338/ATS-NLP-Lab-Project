@@ -3,71 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Resume Optimizer</title>
+    <title>Candidate Ranking Engine</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <main class="page-shell">
+        <section class="hero-card">
+            <h1>ATS Candidate Ranking Engine</h1>
+            <p>Upload one job description and multiple resumes to get an instant ranked shortlist.</p>
+        </section>
 
-    <div class="main-container">
-        <header>
-            <h1>ATS Resume <span class="highlight">Match Score</span></h1>
-            <p>Check your resume fit against job description.</p>
-        </header>
-
-        <form id="analyzeForm" enctype="multipart/form-data">
-            
-            <div class="input-group">
-                <label for="job_description">1. Paste Job Description</label>
-                <textarea id="job_description" name="job_description" placeholder="Paste the JD text here..." required></textarea>
-            </div>
-
-            <div class="input-group">
-                <label>2. Upload Resume (PDF)</label>
-                
-                <button type="button" class="container-btn-file">
-                    <svg fill="#fff" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                    </svg>
-                    Select PDF Resume
-                    <input class="file" name="resume" id="resume" type="file" accept=".pdf" required />
-                </button>
-                <span id="file-name" class="file-name">No file selected</span>
-            </div>
-
-            <button type="submit" id="submitBtn" class="analyze-btn">Analyze Match</button>
-        </form>
-
-        <div id="loading" class="hidden">
-            <div class="spinner"></div>
-            <p>Scanning Resume...</p>
-        </div>
-
-        <div id="results" class="results-container hidden">
-            
-            <div class="score-card">
-                <div class="score-circle">
-                    <span id="match_score">0%</span>
-                    <small>Match</small>
+        <section class="panel">
+            <form id="analyzeForm" enctype="multipart/form-data" class="stack">
+                <div class="input-group field-box">
+                    <label for="job_description">Job Description</label>
+                    <textarea id="job_description" name="job_description" placeholder="Paste the full job description here..." required></textarea>
+                    <p class="field-hint">Include required skills, responsibilities, and preferred tools for better ranking.</p>
                 </div>
-                <div class="category-info">
-                    <h3>Resume Category</h3>
-                    <span id="resume_category" class="badge category-badge">Unknown</span>
-                </div>
-            </div>
 
-            <div class="skills-section">
-                <div class="skill-box">
-                    <h4>Matched Skills</h4>
-                    <div id="matched_skills" class="tags-container"></div>
+                <div class="input-group field-box">
+                    <label for="resumes">Resumes (PDF, multiple)</label>
+                    <div class="file-dropzone">
+                        <input name="resumes" id="resumes" type="file" accept=".pdf" multiple required />
+                        <p class="dropzone-title">Choose up to 20 resume PDFs</p>
+                        <p id="file-summary" class="dropzone-subtitle">No files selected</p>
+                    </div>
                 </div>
-                <div class="skill-box">
-                    <h4>Missing Skills</h4>
-                    <div id="missing_skills" class="tags-container"></div>
+
+                <div class="topn-row field-box">
+                    <label for="top_n">Top N Results (optional)</label>
+                    <input id="top_n" name="top_n" type="number" min="1" max="20" placeholder="e.g. 10">
+                    <p class="field-hint">Leave blank to rank and return all uploaded resumes.</p>
                 </div>
+
+                <button type="submit" id="submitBtn" class="analyze-btn">Rank Candidates</button>
+            </form>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Analyzing resumes and generating ranking...</p>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <section id="results" class="results hidden">
+            <header class="results-header">
+                <h2>Ranked Candidates</h2>
+                <span id="result-count" class="badge">0 results</span>
+            </header>
+            <div id="ranking-list" class="ranking-list"></div>
+        </section>
+    </main>
 
     <script src="/static/script.js"></script>
 </body>

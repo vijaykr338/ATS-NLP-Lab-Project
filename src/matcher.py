@@ -1,31 +1,48 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-def skill_match_score(resume_skills, jd_skills):
-    if not jd_skills:
-        return 0
-    return len(resume_skills & jd_skills)/len(jd_skills)
 
-def compute_match_score(clean_resume_text, clean_jd_text, resume_skills, jd_skills):
-    """
-    Computes ATS match score using TF-IDF + Cosine Similarity
-    Returns score in range 0–100
-    """
+EMBEDDING_WEIGHT = 0.5
+TFIDF_WEIGHT = 0.3
+SKILL_WEIGHT = 0.2
 
-    vectorizer = TfidfVectorizer(
-        max_features=500,
-        ngram_range=(1, 2)  # single words and 2 word phrases
+
+def compute_embedding_similarity(resume_embedding, jd_embedding):
+    return float(cosine_similarity([resume_embedding], [jd_embedding])[0][0])
+
+
+def compute_tfidf_similarities(clean_jd_text, clean_resume_texts):
+    vectorizer = TfidfVectorizer(max_features=3000, ngram_range=(1, 2))
+    tfidf_matrix = vectorizer.fit_transform([clean_jd_text] + clean_resume_texts)
+
+    jd_vector = tfidf_matrix[0]
+    resume_vectors = tfidf_matrix[1:]
+
+    return cosine_similarity(resume_vectors, jd_vector).flatten().tolist()
+
+
+def compute_skill_overlap(resume_skills, required_skills):
+    if not required_skills:
+        return 0.0, [], []
+
+    matched = sorted(resume_skills & required_skills)
+    missing = sorted(required_skills - resume_skills)
+    score = len(matched) / len(required_skills)
+
+    return score, matched, missing
+
+
+def compute_final_score(embedding_similarity, tfidf_similarity, skill_overlap_score):
+    return (
+        EMBEDDING_WEIGHT * embedding_similarity
+        + TFIDF_WEIGHT * tfidf_similarity
+        + SKILL_WEIGHT * skill_overlap_score
     )
 
-    tfidf_matrix = vectorizer.fit_transform(
-        [clean_resume_text, clean_jd_text]
+
+def build_rank_reason(embedding_similarity, tfidf_similarity, skill_overlap_score):
+    return (
+        "High semantic alignment with the job description, "
+        f"strong keyword similarity ({tfidf_similarity:.2f}), "
+        f"and skill coverage ({skill_overlap_score:.2f})."
     )
-
-    similarity = cosine_similarity(
-        tfidf_matrix[0],
-        tfidf_matrix[1]
-    )[0][0]
-
-    skills_coverage = skill_match_score(resume_skills, jd_skills)
-
-    return round((similarity*0.4 + skills_coverage*0.6)*100, 2)
